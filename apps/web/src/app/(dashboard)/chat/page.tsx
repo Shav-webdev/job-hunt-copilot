@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Markdown from 'react-markdown';
 
 type EventType = 'start' | 'tool_start' | 'tool_end' | 'llm_chunk' | 'done' | 'error';
 
@@ -192,9 +193,11 @@ function LogItem({ event }: { event: AgentEvent }) {
   if (event.type === 'llm_chunk') {
     return (
       <li className="rounded-lg bg-zinc-50 px-4 py-3 dark:bg-zinc-900">
-        <p className="text-sm leading-relaxed whitespace-pre-wrap text-zinc-800 dark:text-zinc-200">
-          {event.message}
-        </p>
+        <div className="prose prose-sm prose-zinc dark:prose-invert max-w-none
+          prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5
+          prose-headings:my-2 prose-a:text-blue-600">
+          <Markdown>{event.message}</Markdown>
+        </div>
       </li>
     );
   }
