@@ -1,0 +1,25 @@
+replicaCount: 1
+
+image:
+  repository: jobhunt/api
+  tag: latest-dev
+  pullPolicy: IfNotPresent
+
+service:
+  port: 3000
+
+ingress:
+  enabled: true
+  className: nginx
+  host: api.jobhunt.local
+
+env:
+  PORT: "3000"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi

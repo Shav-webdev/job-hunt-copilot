@@ -1,0 +1,23 @@
+web:
+  image:
+    repository: jobhunt/web
+    tag: v3
+  ingress:
+    host: jobhunt.local
+
+api:
+  image:
+    repository: jobhunt/api
+    tag: v3
+  ingress:
+    host: api.jobhunt.local
+
+ai-core:
+  image:
+    repository: jobhunt/ai-core
+    tag: v2
+
+agent:
+  image:
+    repository: jobhunt/agent
+    tag: v2

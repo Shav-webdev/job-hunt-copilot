@@ -1,0 +1,28 @@
+# dependencies
+node_modules/
+
+# env files with secrets
+.env.local
+.env.*.local
+
+# Next.js build output
+apps/web/.next/
+apps/web/out/
+
+# NestJS build output
+apps/api/dist/
+
+# Python caches
+__pycache__/
+*.pyc
+.venv/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# pnpm
+.pnpm-store/

@@ -1,0 +1,16 @@
+# Local overrides — generous limits for k3d dev (no prod-style caps)
+web:
+  resources:
+    requests:
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+
+api:
+  resources: {}
+
+ai-core:
+  resources: {}
+
+agent:
+  resources: {}

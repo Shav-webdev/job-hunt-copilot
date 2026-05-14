@@ -1,0 +1,71 @@
+load('ext://restart_process', 'docker_build_with_restart')
+
+# ── Images ────────────────────────────────────────────────────────────────────
+
+docker_build(
+    'jobhunt/web',
+    '.',
+    dockerfile='docker/web.Dockerfile',
+    target='dev',
+    live_update=[
+        sync('./apps/web', '/app/apps/web'),
+        run('pnpm install --frozen-lockfile',
+            trigger=['apps/web/package.json', 'pnpm-lock.yaml']),
+    ],
+)
+
+docker_build(
+    'jobhunt/api',
+    '.',
+    dockerfile='docker/api.Dockerfile',
+    target='dev',
+    live_update=[
+        sync('./apps/api/src', '/app/apps/api/src'),
+        run('pnpm install --frozen-lockfile',
+            trigger=['apps/api/package.json', 'pnpm-lock.yaml']),
+    ],
+)
+
+docker_build(
+    'jobhunt/ai-core',
+    '.',
+    dockerfile='docker/ai-core.Dockerfile',
+    target='dev',
+    live_update=[
+        sync('./apps/ai-core', '/app'),
+        run('uv sync --frozen',
+            trigger=['apps/ai-core/pyproject.toml', 'apps/ai-core/uv.lock']),
+    ],
+)
+
+docker_build(
+    'jobhunt/agent',
+    '.',
+    dockerfile='docker/agent.Dockerfile',
+    target='dev',
+    live_update=[
+        sync('./apps/agent', '/app'),
+        run('uv sync --frozen',
+            trigger=['apps/agent/pyproject.toml', 'apps/agent/uv.lock']),
+    ],
+)
+
+# ── Helm release ──────────────────────────────────────────────────────────────
+
+helm_resource(
+    'jobhunt',
+    './infra/charts/umbrella',
+    flags=['-f', 'infra/charts/umbrella/values.local.yaml'],
+    image_deps=['jobhunt/web', 'jobhunt/api', 'jobhunt/ai-core', 'jobhunt/agent'],
+    image_keys=[
+        ('web.image.repository', 'web.image.tag'),
+        ('api.image.repository', 'api.image.tag'),
+        ('ai-core.image.repository', 'ai-core.image.tag'),
+        ('agent.image.repository', 'agent.image.tag'),
+    ],
+)
+
+# ── Port forwards (convenience) ───────────────────────────────────────────────
+# Tilt UI: http://localhost:10350
+# Web:     http://jobhunt.local  (via k3d loadbalancer on :8080)
+# API:     http://api.jobhunt.local

@@ -1,0 +1,15 @@
+dependencies:
+- name: web
+  repository: file://../web
+  version: 0.1.0
+- name: api
+  repository: file://../api
+  version: 0.1.0
+- name: ai-core
+  repository: file://../ai-core
+  version: 0.1.0
+- name: agent
+  repository: file://../agent
+  version: 0.1.0
+digest: sha256:402f920bed100e647af8d601220c8f3b284307b13ccbc3232a0c3a16218cefeb
+generated: "2026-05-13T18:56:45.332065+04:00"

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: web
+description: Job Hunt Copilot — Web (Next.js 15)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
