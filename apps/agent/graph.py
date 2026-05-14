@@ -38,22 +38,35 @@ async def run_agent(run_id: str, goal: str, user_id: str, api_token: str, redis)
         ):
             kind = event["event"]
 
-            if kind == "on_tool_start":
+            if kind == "on_chat_model_stream":
+                chunk = event["data"].get("chunk")
+                if chunk is not None:
+                    content = getattr(chunk, "content", "")
+                    if isinstance(content, str) and content:
+                        await publish("llm_chunk", content, {"text": content})
+                    elif isinstance(content, list):
+                        for part in content:
+                            if isinstance(part, dict) and part.get("type") == "text":
+                                text = part.get("text", "")
+                                if text:
+                                    await publish("llm_chunk", text, {"text": text})
+
+            elif kind == "on_tool_start":
                 iteration += 1
                 if iteration > MAX_ITERATIONS:
                     await publish("error", "Max iterations reached.")
                     return
                 name = event["name"]
                 inp = event["data"].get("input", {})
-                # Summarise input without dumping full CV text
-                summary = {k: (v[:100] + "…" if isinstance(v, str) and len(v) > 100 else v)
+                summary = {k: (v[:120] + "…" if isinstance(v, str) and len(v) > 120 else v)
                            for k, v in (inp.items() if isinstance(inp, dict) else {})}
                 await publish("tool_start", f"→ {name}", {"tool": name, "input": summary})
 
             elif kind == "on_tool_end":
                 name = event["name"]
-                output = str(event["data"].get("output", ""))[:200]
-                await publish("tool_end", f"✓ {name}: {output}", {"tool": name})
+                raw = event["data"].get("output", "")
+                output = str(raw)[:600]
+                await publish("tool_end", f"✓ {name}", {"tool": name, "output": output})
 
         await publish("done", "Agent finished.")
 
