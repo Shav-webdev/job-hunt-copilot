@@ -24,7 +24,7 @@ async def run_agent(run_id: str, goal: str, user_id: str, api_token: str, redis)
         google_api_key=GEMINI_API_KEY,
         temperature=0,
     )
-    agent = create_react_agent(llm, tools, state_modifier=(
+    agent = create_react_agent(llm, tools, prompt=(
         "You are a job hunt assistant. Help the user achieve their goal using the available tools. "
         "Always start by getting the user's CV. Be concise and action-oriented. "
         f"Hard limit: {MAX_ITERATIONS} tool calls total."

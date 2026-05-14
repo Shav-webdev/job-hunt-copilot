@@ -14,7 +14,7 @@ export class AgentService implements OnModuleInit, OnModuleDestroy {
     private readonly http: HttpService,
     private readonly config: ConfigService,
   ) {
-    this.agentUrl = this.config.get('AGENT_URL', 'http://jobhunt-agent:8000');
+    this.agentUrl = this.config.get('AGENT_URL', 'http://jobhunt-agent:8001');
   }
 
   onModuleInit() {

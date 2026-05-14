@@ -14,10 +14,10 @@ export class AgentController {
   @Post('run')
   async startRun(
     @Body() body: { goal: string },
-    @Req() req: Request & { user: { userId: string } },
+    @Req() req: Request & { user: { id: string } },
   ) {
     const token = req.headers.authorization?.replace('Bearer ', '') ?? '';
-    const runId = await this.agentService.startRun(body.goal, req.user.userId, token);
+    const runId = await this.agentService.startRun(body.goal, req.user.id, token);
     return { run_id: runId };
   }
 
