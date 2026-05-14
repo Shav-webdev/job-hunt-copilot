@@ -1,4 +1,5 @@
 import { pgTable, uuid, text, timestamp, jsonb, index } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -45,6 +46,24 @@ export const applications = pgTable('applications', {
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
+
+export const usersRelations = relations(users, ({ many }) => ({
+  applications: many(applications),
+  cvs: many(cvs),
+}));
+
+export const jobsRelations = relations(jobs, ({ many }) => ({
+  applications: many(applications),
+}));
+
+export const applicationsRelations = relations(applications, ({ one }) => ({
+  user: one(users, { fields: [applications.userId], references: [users.id] }),
+  job: one(jobs, { fields: [applications.jobId], references: [jobs.id] }),
+}));
+
+export const cvsRelations = relations(cvs, ({ one }) => ({
+  user: one(users, { fields: [cvs.userId], references: [users.id] }),
+}));
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
