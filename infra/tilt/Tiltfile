@@ -1,4 +1,15 @@
 load('ext://restart_process', 'docker_build_with_restart')
+load('ext://helm_remote', 'helm_remote')
+
+# ── Redis (pub/sub for agent streaming) ───────────────────────────────────────
+helm_remote(
+    'redis',
+    repo_name='bitnami',
+    repo_url='https://charts.bitnami.com/bitnami',
+    release_name='redis',
+    namespace='default',
+    set=['auth.enabled=false', 'master.persistence.enabled=false', 'replica.replicaCount=0'],
+)
 
 # ── Images ────────────────────────────────────────────────────────────────────
 

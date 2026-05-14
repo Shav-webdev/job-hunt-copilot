@@ -8,7 +8,10 @@ image:
 service:
   port: 8001
 
-env: {}
+env:
+  API_URL: "http://jobhunt-api:3000"
+  AI_CORE_URL: "http://jobhunt-ai-core:8000"
+  REDIS_URL: "redis://redis-master:6379"
 
 resources:
   requests:

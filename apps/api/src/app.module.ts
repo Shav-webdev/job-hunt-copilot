@@ -9,6 +9,7 @@ import { UsersModule } from './users/users.module';
 import { JobsModule } from './jobs/jobs.module';
 import { ApplicationsModule } from './applications/applications.module';
 import { CvsModule } from './cvs/cvs.module';
+import { AgentModule } from './agent/agent.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { CvsModule } from './cvs/cvs.module';
     JobsModule,
     ApplicationsModule,
     CvsModule,
+    AgentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

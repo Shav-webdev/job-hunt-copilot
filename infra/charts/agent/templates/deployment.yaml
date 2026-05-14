@@ -20,6 +20,10 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.service.port }}
+          envFrom:
+            - secretRef:
+                name: jobhunt-agent-env
+                optional: true
           env:
             {{- range $key, $val := .Values.env }}
             - name: {{ $key }}

@@ -15,6 +15,8 @@ ingress:
 
 env:
   PORT: "3000"
+  AGENT_URL: "http://jobhunt-agent:8001"
+  REDIS_URL: "redis://redis-master:6379"
 
 resources:
   requests:

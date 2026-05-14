@@ -3,10 +3,10 @@ import { auth, signOut } from '@/auth';
 
 const NAV = [
   { href: '/dashboard', label: 'Dashboard' },
-  { href: '/dashboard/jobs', label: 'Jobs' },
-  { href: '/dashboard/applications', label: 'Applications' },
-  { href: '/dashboard/profile', label: 'Profile' },
-  { href: '/dashboard/chat', label: 'Chat' },
+  { href: '/jobs', label: 'Jobs' },
+  { href: '/applications', label: 'Applications' },
+  { href: '/profile', label: 'Profile' },
+  { href: '/chat', label: 'Chat' },
 ];
 
 export async function Sidebar() {
