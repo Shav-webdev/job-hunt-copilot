@@ -13,7 +13,7 @@ async function runMigrations() {
     ssl: { rejectUnauthorized: false },
   });
   const db = drizzle(pool);
-  await migrate(db, { migrationsFolder: path.join(__dirname, '..', 'drizzle') });
+  await migrate(db, { migrationsFolder: path.join(__dirname, '..', '..', 'drizzle') });
   await pool.end();
 }
 

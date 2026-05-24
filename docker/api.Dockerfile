@@ -36,4 +36,4 @@ COPY --from=builder /app/apps/api/drizzle ./drizzle
 COPY --from=builder /app/apps/api/package.json ./package.json
 USER node
 EXPOSE 3000
-CMD ["node", "dist/main"]
+CMD ["node", "dist/src/main"]
