@@ -1,11 +1,17 @@
-import os
 import json
+import os
+from typing import Callable, Awaitable
 
 from langchain_core.messages import HumanMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.prebuilt import create_react_agent
 
 from tools import make_tools
+
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+MAX_ITERATIONS = 10
+
+PublishFn = Callable[[str, str, str, dict | None], Awaitable[None]]
 
 
 def _friendly_error(exc: Exception) -> str:
@@ -27,14 +33,16 @@ def _friendly_error(exc: Exception) -> str:
         return "The request timed out. Try a simpler query or try again shortly."
     return f"Something went wrong: {msg[:200]}"
 
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-MAX_ITERATIONS = 10
 
-
-async def run_agent(run_id: str, goal: str, user_id: str, api_token: str, redis) -> None:
+async def run_agent(
+    run_id: str,
+    goal: str,
+    user_id: str,
+    api_token: str,
+    publish_fn: PublishFn,
+) -> None:
     async def publish(event_type: str, message: str, data: dict | None = None) -> None:
-        payload = json.dumps({"type": event_type, "message": message, "data": data or {}})
-        await redis.publish(f"agent:run:{run_id}", payload)
+        await publish_fn(run_id, event_type, message, data)
 
     await publish("start", f"Starting: {goal}")
 
@@ -78,8 +86,10 @@ async def run_agent(run_id: str, goal: str, user_id: str, api_token: str, redis)
                     return
                 name = event["name"]
                 inp = event["data"].get("input", {})
-                summary = {k: (v[:120] + "…" if isinstance(v, str) and len(v) > 120 else v)
-                           for k, v in (inp.items() if isinstance(inp, dict) else {})}
+                summary = {
+                    k: (v[:120] + "…" if isinstance(v, str) and len(v) > 120 else v)
+                    for k, v in (inp.items() if isinstance(inp, dict) else {})
+                }
                 await publish("tool_start", f"→ {name}", {"tool": name, "input": summary})
 
             elif kind == "on_tool_end":

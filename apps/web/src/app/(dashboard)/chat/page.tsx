@@ -207,6 +207,9 @@ function LogItem({ event }: { event: AgentEvent }) {
     let parsed: unknown = null;
     try { parsed = JSON.parse(output ?? ''); } catch { /* not JSON */ }
 
+    const isJobArray = Array.isArray(parsed) && (parsed as Record<string, unknown>[])[0]?.title !== undefined;
+    const isError = parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed) && 'error' in (parsed as object);
+
     return (
       <li className="space-y-1">
         <div className="flex items-center gap-2 text-sm">
@@ -215,21 +218,40 @@ function LogItem({ event }: { event: AgentEvent }) {
         </div>
         {output && (
           <div className="ml-5 rounded-md bg-zinc-50 px-3 py-2 dark:bg-zinc-900">
-            {Array.isArray(parsed) ? (
-              <ul className="space-y-1.5">
+            {isJobArray ? (
+              <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
                 {(parsed as Record<string, string>[]).map((item, i) => (
-                  <li key={i} className="text-xs text-zinc-600 dark:text-zinc-400">
-                    <span className="font-medium text-zinc-800 dark:text-zinc-200">{item.title}</span>
-                    {item.company ? ` · ${item.company}` : ''}
-                    {item.url ? (
-                      <a href={item.url} target="_blank" rel="noopener noreferrer"
-                        className="ml-1 text-blue-600 hover:underline">↗</a>
-                    ) : null}
+                  <li key={i} className="py-2 first:pt-0 last:pb-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-100 leading-snug">
+                        {item.title}
+                      </span>
+                      {item.url ? (
+                        <a href={item.url} target="_blank" rel="noopener noreferrer"
+                          className="shrink-0 text-xs text-blue-600 hover:underline mt-0.5">↗ Apply</a>
+                      ) : null}
+                    </div>
+                    {item.company && (
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">{item.company}</p>
+                    )}
+                    {item.description && (
+                      <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
+                        {item.description.replace(/<[^>]+>/g, ' ').trim()}
+                      </p>
+                    )}
                   </li>
                 ))}
               </ul>
+            ) : isError ? (
+              <p className="text-xs text-red-500">
+                {String((parsed as Record<string, unknown>).error)}
+              </p>
             ) : (
-              <p className="text-xs text-zinc-500 whitespace-pre-wrap line-clamp-4">{output}</p>
+              <div className="prose prose-xs prose-zinc dark:prose-invert max-w-none
+                prose-p:my-0.5 prose-ul:my-0.5 prose-li:my-0 prose-headings:my-1
+                [&>*]:text-xs [&>*]:text-zinc-600 dark:[&>*]:text-zinc-400">
+                <Markdown>{output}</Markdown>
+              </div>
             )}
           </div>
         )}
@@ -237,15 +259,25 @@ function LogItem({ event }: { event: AgentEvent }) {
     );
   }
 
+  if (event.type === 'error') {
+    return (
+      <li className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 dark:border-red-900 dark:bg-red-950/40">
+        <div className="flex items-start gap-2">
+          <span className="shrink-0 text-red-500">❌</span>
+          <p className="text-sm text-red-700 dark:text-red-400">{event.message}</p>
+        </div>
+      </li>
+    );
+  }
+
   const colours: Partial<Record<EventType, string>> = {
-    error: 'text-red-600',
     done: 'text-green-600 font-medium',
     tool_start: 'text-blue-600',
     start: 'text-zinc-500 text-xs',
   };
 
   const icons: Partial<Record<EventType, string>> = {
-    start: '🚀', tool_start: '⚙️', done: '✅', error: '❌',
+    start: '🚀', tool_start: '⚙️', done: '✅',
   };
 
   return (

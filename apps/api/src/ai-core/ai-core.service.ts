@@ -21,39 +21,65 @@ export class AiCoreService {
   private readonly baseUrl: string;
 
   constructor(config: ConfigService) {
-    this.baseUrl = config.get<string>('AI_CORE_URL') ?? 'http://jobhunt-ai-core:8000';
+    this.baseUrl =
+      config.get<string>('AI_URL') ?? 'http://jobhunt-ai:8000';
   }
 
   async parseCv(pdfBuffer: Buffer, filename: string): Promise<ParsedCV> {
     const form = new FormData();
-    form.append('file', new Blob([new Uint8Array(pdfBuffer)], { type: 'application/pdf' }), filename);
+    form.append(
+      'file',
+      new Blob([new Uint8Array(pdfBuffer)], { type: 'application/pdf' }),
+      filename,
+    );
 
-    const res = await fetch(`${this.baseUrl}/parse-cv`, { method: 'POST', body: form });
+    const res = await fetch(`${this.baseUrl}/parse-cv`, {
+      method: 'POST',
+      body: form,
+    });
     if (!res.ok) {
       const err = await res.text().catch(() => res.statusText);
       throw new BadGatewayException(`ai-core /parse-cv failed: ${err}`);
     }
-    return res.json() as Promise<ParsedCV>;
+    return (await res.json()) as Promise<ParsedCV>;
   }
 
   async score(cvText: string, jobDescription: string): Promise<ScoreResult> {
     const res = await fetch(`${this.baseUrl}/score`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cv_text: cvText, job_description: jobDescription }),
+      body: JSON.stringify({
+        cv_text: cvText,
+        job_description: jobDescription,
+      }),
     });
     if (!res.ok) {
       const err = await res.text().catch(() => res.statusText);
       throw new BadGatewayException(`ai-core /score failed: ${err}`);
     }
-    return res.json() as Promise<ScoreResult>;
+    return (await res.json()) as Promise<ScoreResult>;
   }
 
-  getCoverLetterStreamUrl(cvText: string, jobTitle: string, jobDescription: string, company: string): string {
+  getCoverLetterStreamUrl(
+    cvText: string,
+    jobTitle: string,
+    jobDescription: string,
+    company: string,
+  ): string {
     return `${this.baseUrl}/draft-cover-letter`;
   }
 
-  buildCoverLetterBody(cvText: string, jobTitle: string, jobDescription: string, company: string) {
-    return { cv_text: cvText, job_title: jobTitle, job_description: jobDescription, company };
+  buildCoverLetterBody(
+    cvText: string,
+    jobTitle: string,
+    jobDescription: string,
+    company: string,
+  ) {
+    return {
+      cv_text: cvText,
+      job_title: jobTitle,
+      job_description: jobDescription,
+      company,
+    };
   }
 }

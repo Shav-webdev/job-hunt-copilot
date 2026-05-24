@@ -4,7 +4,9 @@ web:
     requests:
       memory: 512Mi
     limits:
-      memory: 1Gi
+      memory: 2Gi
+  env:
+    NODE_OPTIONS: "--max-old-space-size=1536"
 
 api:
   resources:

@@ -1,34 +1,23 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import type { Response } from 'express';
-import Redis from 'ioredis';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable()
-export class AgentService implements OnModuleInit, OnModuleDestroy {
-  private redis: Redis;
-  private readonly agentUrl: string;
+export class AgentService {
+  private readonly aiUrl: string;
 
   constructor(
     private readonly http: HttpService,
     private readonly config: ConfigService,
   ) {
-    this.agentUrl = this.config.get('AGENT_URL', 'http://jobhunt-agent:8001');
-  }
-
-  onModuleInit() {
-    const redisUrl = this.config.get('REDIS_URL', 'redis://redis-master:6379');
-    this.redis = new Redis(redisUrl);
-  }
-
-  onModuleDestroy() {
-    this.redis.disconnect();
+    this.aiUrl = this.config.get('AI_URL', 'http://jobhunt-ai:8000');
   }
 
   async startRun(goal: string, userId: string, apiToken: string): Promise<string> {
     const { data } = await firstValueFrom(
-      this.http.post<{ run_id: string }>(`${this.agentUrl}/run`, {
+      this.http.post<{ run_id: string }>(`${this.aiUrl}/agent/run`, {
         goal,
         user_id: userId,
         api_token: apiToken,
@@ -42,25 +31,36 @@ export class AgentService implements OnModuleInit, OnModuleDestroy {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('X-Accel-Buffering', 'no');
 
-    const sub = this.redis.duplicate();
-    await sub.subscribe(`agent:run:${runId}`);
+    let upstream: globalThis.Response;
+    try {
+      upstream = await fetch(`${this.aiUrl}/agent/${runId}/stream`);
+    } catch {
+      res.write('data: {"type":"error","message":"Agent service unreachable"}\n\n');
+      res.end();
+      return;
+    }
 
-    const cleanup = () => {
-      sub.unsubscribe().catch(() => null);
-      sub.disconnect();
-    };
+    if (!upstream.ok || !upstream.body) {
+      res.write('data: {"type":"error","message":"Agent stream unavailable"}\n\n');
+      res.end();
+      return;
+    }
 
-    sub.on('message', (_channel: string, message: string) => {
-      res.write(`data: ${message}\n\n`);
-      try {
-        const event = JSON.parse(message) as { type: string };
-        if (event.type === 'done' || event.type === 'error') {
-          cleanup();
-          res.end();
-        }
-      } catch { /* ignore parse errors */ }
-    });
+    const reader = upstream.body.getReader();
+    const decoder = new TextDecoder();
 
+    const cleanup = () => reader.cancel().catch(() => null);
     res.on('close', cleanup);
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        res.write(decoder.decode(value, { stream: true }));
+      }
+    } finally {
+      cleanup();
+      if (!res.writableEnded) res.end();
+    }
   }
 }
