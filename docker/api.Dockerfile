@@ -20,20 +20,19 @@ COPY apps/api/package.json ./apps/api/
 RUN pnpm install --frozen-lockfile
 COPY . .
 RUN pnpm --filter api build
-# Produce a self-contained node_modules for the api package only
-RUN pnpm --filter api deploy --prod /deploy
 
 # ── prod ──────────────────────────────────────────────────────────────────────
 FROM node:22-alpine AS prod
 WORKDIR /app
 ENV NODE_ENV=production
-# Runtime deps from pnpm deploy (no dev deps, no workspace symlinks)
-COPY --from=builder /deploy/node_modules ./node_modules
-# Compiled application
-COPY --from=builder /app/apps/api/dist ./dist
-# Drizzle migration SQL files (needed when RUN_MIGRATIONS_ON_BOOT=true)
-COPY --from=builder /app/apps/api/drizzle ./drizzle
-COPY --from=builder /app/apps/api/package.json ./package.json
+# Copy the root node_modules — pnpm hoists everything here; Node resolution
+# walks up from apps/api/dist/src/ and finds them at /app/node_modules.
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+# Compiled application and drizzle migration files
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/drizzle ./apps/api/drizzle
+COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
 USER node
 EXPOSE 3000
-CMD ["node", "dist/src/main"]
+CMD ["node", "apps/api/dist/src/main"]
