@@ -25,14 +25,14 @@ RUN pnpm --filter api build
 FROM node:22-alpine AS prod
 WORKDIR /app
 ENV NODE_ENV=production
-# Copy the root node_modules — pnpm hoists everything here; Node resolution
-# walks up from apps/api/dist/src/ and finds them at /app/node_modules.
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-# Compiled application and drizzle migration files
-COPY --from=builder /app/apps/api/dist ./apps/api/dist
-COPY --from=builder /app/apps/api/drizzle ./apps/api/drizzle
-COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
+# Install ONLY the API's production deps with plain npm — no pnpm workspace,
+# no Next.js, no platform-specific native binaries from other workspace members.
+# Results in ~40MB node_modules instead of 693MB.
+COPY apps/api/package.json ./package.json
+RUN npm install --omit=dev --ignore-scripts
+# Compiled application and Drizzle migration files
+COPY --from=builder /app/apps/api/dist ./dist
+COPY --from=builder /app/apps/api/drizzle ./drizzle
 USER node
 EXPOSE 3000
-CMD ["node", "apps/api/dist/src/main"]
+CMD ["node", "dist/src/main"]
