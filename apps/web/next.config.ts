@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ['jobhunt.local'],
+  ...(process.env.NODE_ENV !== 'production' && {
+    allowedDevOrigins: ['jobhunt.local'],
+  }),
 };
 
 export default nextConfig;
