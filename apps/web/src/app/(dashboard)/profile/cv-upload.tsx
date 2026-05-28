@@ -18,7 +18,7 @@ export function CvUpload() {
     form.append('file', file);
 
     try {
-      const res = await fetch('/api/proxy/cvs/upload', { method: 'POST', body: form });
+      const res = await fetch('/api/proxy/cv-upload', { method: 'POST', body: form });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ message: res.statusText })) as { message: string };
         throw new Error(err.message);
