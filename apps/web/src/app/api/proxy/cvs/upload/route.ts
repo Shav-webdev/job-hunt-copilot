@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 
+export const dynamic = 'force-dynamic';
+
 const API_URL = process.env.API_URL ?? 'http://localhost:3000';
 
 export async function POST(req: NextRequest) {
