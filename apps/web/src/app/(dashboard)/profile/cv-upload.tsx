@@ -20,14 +20,17 @@ export function CvUpload() {
     try {
       const res = await fetch('/api/proxy/cv-upload', { method: 'POST', body: form });
       if (!res.ok) {
+        if (res.status === 429) throw new Error('AI is busy — please wait a few seconds and try again.');
         const err = await res.json().catch(() => ({ message: res.statusText })) as { message: string };
         throw new Error(err.message);
       }
       setStatus('done');
       setMessage('CV uploaded and parsed successfully. Refresh to see your profile.');
+      if (inputRef.current) inputRef.current.value = '';
     } catch (err) {
       setStatus('error');
       setMessage(err instanceof Error ? err.message : 'Upload failed');
+      if (inputRef.current) inputRef.current.value = '';
     }
   }
 
