@@ -16,8 +16,9 @@ export default defineConfig({
   ],
   webServer: {
     command: 'pnpm dev',
-    url: 'http://localhost:3000',
+    url: 'http://localhost:3000/api/health',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    env: { NEXTAUTH_URL: 'http://localhost:3000' },
   },
 });

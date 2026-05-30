@@ -6,6 +6,7 @@ import asyncio
 import io
 import json
 import os
+import time
 from typing import AsyncIterator, Optional
 
 from dotenv import load_dotenv
@@ -74,6 +75,13 @@ class CoverLetterRequest(BaseModel):
 # ── embed ─────────────────────────────────────────────────────────────────────
 
 
+_RATE_LIMIT_SIGNALS = ("429", "too many requests", "resource_exhausted", "quota")
+
+
+def _is_rate_limited(exc: Exception) -> bool:
+    return any(s in str(exc).lower() for s in _RATE_LIMIT_SIGNALS)
+
+
 def embed(text: str) -> list[float]:
     resp = client.models.embed_content(model=EMBED_MODEL, contents=text)
     return resp.embeddings[0].values
@@ -105,16 +113,27 @@ CV text:
 
 
 def parse_cv_text(text: str) -> ParsedCV:
-    resp = client.models.generate_content(
-        model=FLASH,
-        contents=_PARSE_PROMPT + text[:12000],
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            temperature=0.1,
-        ),
-    )
-    parsed = json.loads(resp.text)
-    return ParsedCV(**parsed)
+    last_exc: Exception | None = None
+    for attempt in range(3):
+        try:
+            resp = client.models.generate_content(
+                model=FLASH,
+                contents=_PARSE_PROMPT + text[:12000],
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.1,
+                ),
+            )
+            parsed = json.loads(resp.text)
+            return ParsedCV(**parsed)
+        except Exception as exc:
+            if _is_rate_limited(exc):
+                last_exc = exc
+                if attempt < 2:
+                    time.sleep(2**attempt)
+                    continue
+            raise
+    raise last_exc  # type: ignore[misc]
 
 
 # ── score ─────────────────────────────────────────────────────────────────────

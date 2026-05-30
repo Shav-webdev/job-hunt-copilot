@@ -10,6 +10,7 @@ from ai_functions import (
     ParsedCV,
     ScoreRequest,
     ScoreResponse,
+    _is_rate_limited,
     embed,
     extract_pdf_text,
     generate_cover_letter_chunks,
@@ -52,6 +53,8 @@ async def parse_cv(file: UploadFile = File(...)):
     try:
         return parse_cv_text(text)
     except Exception as exc:
+        if _is_rate_limited(exc):
+            raise HTTPException(status_code=429, detail="Gemini rate limit reached — please retry in a few seconds") from exc
         raise HTTPException(status_code=502, detail=f"Could not parse Gemini response: {exc}") from exc
 
 

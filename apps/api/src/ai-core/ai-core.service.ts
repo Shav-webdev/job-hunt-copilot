@@ -1,4 +1,4 @@
-import { Injectable, BadGatewayException } from '@nestjs/common';
+import { Injectable, BadGatewayException, HttpException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 // FormData and Blob are global in Node 24 — no import needed
 
@@ -39,6 +39,7 @@ export class AiCoreService {
     });
     if (!res.ok) {
       const err = await res.text().catch(() => res.statusText);
+      if (res.status === 429) throw new HttpException(err, 429);
       throw new BadGatewayException(`ai-core /parse-cv failed: ${err}`);
     }
     return (await res.json()) as Promise<ParsedCV>;
@@ -55,6 +56,7 @@ export class AiCoreService {
     });
     if (!res.ok) {
       const err = await res.text().catch(() => res.statusText);
+      if (res.status === 429) throw new HttpException(err, 429);
       throw new BadGatewayException(`ai-core /score failed: ${err}`);
     }
     return (await res.json()) as Promise<ScoreResult>;
