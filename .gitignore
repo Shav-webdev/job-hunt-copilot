@@ -10,6 +10,10 @@ node_modules/
 apps/web/.next/
 apps/web/out/
 
+# Playwright
+apps/web/playwright-report/
+apps/web/test-results/
+
 # NestJS build output
 apps/api/dist/
 
