@@ -1,17 +1,19 @@
 import { api } from '@/lib/api';
 import { JobActions } from './job-actions';
+import { TrackJobForm } from './track-job-form';
 
 export default async function JobsPage() {
   const jobs = await api.jobs.list().catch(() => []);
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Jobs</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Jobs</h1>
+        <TrackJobForm />
+      </div>
 
       {jobs.length === 0 ? (
-        <p className="mt-6 text-sm text-zinc-500">
-          No jobs tracked yet. Use <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">POST /jobs</code> via Swagger to add one.
-        </p>
+        <p className="mt-6 text-sm text-zinc-500">No jobs tracked yet. Click &ldquo;Track a job&rdquo; to add one.</p>
       ) : (
         <ul className="mt-6 space-y-3">
           {jobs.map((job) => (

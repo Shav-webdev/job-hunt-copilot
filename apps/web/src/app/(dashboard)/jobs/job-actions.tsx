@@ -18,10 +18,16 @@ export function JobActions({ jobId }: { jobId: string }) {
     setScore(null);
     try {
       const res = await fetch(`/api/proxy/jobs/${jobId}/score`, { method: 'POST' });
-      if (!res.ok) throw new Error((await res.json() as { message: string }).message);
+      if (!res.ok) {
+        const body = await res.json() as { message?: string };
+        if (res.status === 429) {
+          throw new Error('AI rate limit reached — please wait a moment and try again.');
+        }
+        throw new Error(body.message ?? `Error ${res.status}`);
+      }
       setScore(await res.json() as ScoreResult);
     } catch (e) {
-      setScoreError(e instanceof Error ? e.message : 'Failed');
+      setScoreError(e instanceof Error ? e.message : 'Failed to score CV');
     } finally {
       setScoring(false);
     }
